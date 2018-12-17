@@ -14,10 +14,10 @@ function Vue (options) {
   this._init(options)
 }
 
-initMixin(Vue)
-stateMixin(Vue)
-eventsMixin(Vue)
-lifecycleMixin(Vue)
-renderMixin(Vue)
+initMixin(Vue)//定义了_init的方法
+stateMixin(Vue)// 定义了三个方法 set delete watch
+eventsMixin(Vue)// 添加了4个方法 on once off emit
+lifecycleMixin(Vue)// 定义了三个方法 _update forceUpdate destroy
+renderMixin(Vue)// 添加了一系列的方法 以及_render nextTick
 
 export default Vue

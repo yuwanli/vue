@@ -36,9 +36,9 @@ export function initMixin (Vue: Class<Component>) {
       initInternalComponent(vm, options)
     } else {
       vm.$options = mergeOptions(
-        resolveConstructorOptions(vm.constructor),
-        options || {},
-        vm
+        resolveConstructorOptions(vm.constructor),// parent
+        options || {},// child
+        vm//vm
       )
     }
     /* istanbul ignore else */
