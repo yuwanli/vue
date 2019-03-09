@@ -2,31 +2,44 @@
 
 const validDivisionCharRE = /[\w).+\-_$\]]/
 
+// <div :key="/id|featId/.test(id).toString()"></div>
+// <div :key="'id | featId'"></div>
+// <div :key="(aa | bb)"></div>
+
 export function parseFilters (exp: string): string {
-  let inSingle = false
+  let inSingle = false// 用来标识接下来解析的字符是否在由单引号包裹的字符串中
   let inDouble = false
   let inTemplateString = false
   let inRegex = false
-  let curly = 0
-  let square = 0
-  let paren = 0
+  let curly = 0//{}
+  let square = 0//[]
+  let paren = 0//()
   let lastFilterIndex = 0
+  // c 当前字符
+  // i 当前字符索引
+  // pre 前一个字符
+  // expression 返回的结果
+  // filters 过滤器函数名
   let c, prev, i, expression, filters
 
   for (i = 0; i < exp.length; i++) {
     prev = c
     c = exp.charCodeAt(i)
     if (inSingle) {
+      // ' \
       if (c === 0x27 && prev !== 0x5C) inSingle = false
     } else if (inDouble) {
+      // " \
       if (c === 0x22 && prev !== 0x5C) inDouble = false
     } else if (inTemplateString) {
+      // ` \
       if (c === 0x60 && prev !== 0x5C) inTemplateString = false
     } else if (inRegex) {
+      // / \
       if (c === 0x2f && prev !== 0x5C) inRegex = false
     } else if (
-      c === 0x7C && // pipe
-      exp.charCodeAt(i + 1) !== 0x7C &&
+      c === 0x7C && // pipe |
+      exp.charCodeAt(i + 1) !== 0x7C && //  前后不可为 |
       exp.charCodeAt(i - 1) !== 0x7C &&
       !curly && !square && !paren
     ) {
@@ -57,6 +70,7 @@ export function parseFilters (exp: string): string {
           p = exp.charAt(j)
           if (p !== ' ') break
         }
+        // <div :key="a + /a/.test('abc')"></div>
         if (!p || !validDivisionCharRE.test(p)) {
           inRegex = true
         }

@@ -120,6 +120,8 @@ export function addHandler (
   el.plain = false
 }
 
+// <my-component key=true></my-component>
+// <my-component :key='aaa'></my-component>
 export function getBindingAttr (
   el: ASTElement,
   name: string,

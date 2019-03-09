@@ -209,7 +209,8 @@ export function set (target: Array<any> | Object, key: any, val: any): any {
     target.splice(key, 1, val)
     return val
   }
-  if (key in target && !(key in Object.prototype)) {
+  // hasOwnProto false
+  if (key in target && !(key in Object.prototype)) {// true
     target[key] = val
     return val
   }

@@ -4,8 +4,9 @@
  * Check if a string starts with $ or _
  */
 export function isReserved (str: string): boolean {
+  // 判断是$或_开头的保留字段
   const c = (str + '').charCodeAt(0)
-  return c === 0x24 || c === 0x5F
+  return c === 0x24 || c === 0x5F //$|_
 }
 
 /**

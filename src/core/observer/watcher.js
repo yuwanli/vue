@@ -47,8 +47,9 @@ export default class Watcher {
     expOrFn: string | Function,
     cb: Function,
     options?: ?Object,
-    isRenderWatcher?: boolean
+    isRenderWatcher?: boolean //是否是渲染函数的观察者
   ) {
+    console.log(vm)
     this.vm = vm
     if (isRenderWatcher) {
       vm._watcher = this
@@ -68,10 +69,13 @@ export default class Watcher {
     this.id = ++uid // uid for batching
     this.active = true
     this.dirty = this.lazy // for lazy watchers
-    this.deps = []
-    this.newDeps = []
+
+    this.deps = []//防止‘多次’求值的过程中的重复收集依赖
     this.depIds = new Set()
+
+    this.newDeps = []//防止‘一次’求值的过程中的重复收集依赖（一个属性调用使用两次）
     this.newDepIds = new Set()
+
     this.expression = process.env.NODE_ENV !== 'production'
       ? expOrFn.toString()
       : ''

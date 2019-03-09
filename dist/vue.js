@@ -1,6 +1,6 @@
 /*!
  * Vue.js v2.5.21
- * (c) 2014-2018 Evan You
+ * (c) 2014-2019 Evan You
  * Released under the MIT License.
  */
 (function (global, factory) {
@@ -471,8 +471,9 @@
    * Check if a string starts with $ or _
    */
   function isReserved (str) {
+    // 判断是$或_开头的保留字段
     var c = (str + '').charCodeAt(0);
-    return c === 0x24 || c === 0x5F
+    return c === 0x24 || c === 0x5F //$|_
   }
 
   /**
@@ -633,7 +634,7 @@
         ? vm.options
         : vm._isVue
           ? vm.$options || vm.constructor.options
-          : vm || {};
+          : vm;
       var name = options.name || options._componentTag;
       var file = options.__file;
       if (!name && file) {
@@ -728,9 +729,9 @@
     }
   };
 
-  // the current target watcher being evaluated.
-  // this is globally unique because there could be only one
-  // watcher being evaluated at any time.
+  // The current target watcher being evaluated.
+  // This is globally unique because only one watcher
+  // can be evaluated at a time.
   Dep.target = null;
   var targetStack = [];
 
@@ -1069,7 +1070,8 @@
       target.splice(key, 1, val);
       return val
     }
-    if (key in target && !(key in Object.prototype)) {
+    // hasOwnProto false
+    if (key in target && !(key in Object.prototype)) {// true
       target[key] = val;
       return val
     }
@@ -1308,8 +1310,8 @@
     key
   ) {
     // work around Firefox's Object.prototype.watch...
-    if (parentVal === nativeWatch) { parentVal = undefined; }
-    if (childVal === nativeWatch) { childVal = undefined; }
+    if (parentVal === nativeWatch) { parentVal = undefined; } //父对象无watch属性（兼容Firefox存在默认的watch属性的情况）
+    if (childVal === nativeWatch) { childVal = undefined; } //子对象无watch属性（兼容Firefox存在默认的watch属性的情况）
     /* istanbul ignore if */
     if (!childVal) { return Object.create(parentVal || null) }
     {
@@ -1498,7 +1500,7 @@
     normalizeProps(child, vm);
     normalizeInject(child, vm);
     normalizeDirectives(child);
-    
+
     // Apply extends and mixins on the child options,
     // but only if it is a raw options object that isn't
     // the result of another mergeOptions call.
@@ -1517,14 +1519,17 @@
     var options = {};
     var key;
     for (key in parent) {
-      mergeField(key);
+      mergeField(key);//父对象中存在的属性进行合并
     }
     for (key in child) {
       if (!hasOwn(parent, key)) {
-        mergeField(key);
+        mergeField(key);//子对象中特有的属性进行合并
       }
     }
+    // 结果就是：既拥有扶对象的属性也有自对象的属性
     function mergeField (key) {
+      // 不同的属性的的合并策略不一样
+      // 默认策略就是：子属性覆盖父属性
       var strat = strats[key] || defaultStrat;
       options[key] = strat(parent[key], child[key], vm, key);
     }
@@ -2594,8 +2599,8 @@
       }
       // array of events
       if (Array.isArray(event)) {
-        for (var i = 0, l = event.length; i < l; i++) {
-          vm.$off(event[i], fn);
+        for (var i$1 = 0, l = event.length; i$1 < l; i$1++) {
+          vm.$off(event[i$1], fn);
         }
         return vm
       }
@@ -2608,16 +2613,14 @@
         vm._events[event] = null;
         return vm
       }
-      if (fn) {
-        // specific handler
-        var cb;
-        var i$1 = cbs.length;
-        while (i$1--) {
-          cb = cbs[i$1];
-          if (cb === fn || cb.fn === fn) {
-            cbs.splice(i$1, 1);
-            break
-          }
+      // specific handler
+      var cb;
+      var i = cbs.length;
+      while (i--) {
+        cb = cbs[i];
+        if (cb === fn || cb.fn === fn) {
+          cbs.splice(i, 1);
+          break
         }
       }
       return vm
@@ -3204,8 +3207,9 @@
     expOrFn,
     cb,
     options,
-    isRenderWatcher
+    isRenderWatcher //是否是渲染函数的观察者
   ) {
+    console.log(vm);
     this.vm = vm;
     if (isRenderWatcher) {
       vm._watcher = this;
@@ -3225,10 +3229,13 @@
     this.id = ++uid$1; // uid for batching
     this.active = true;
     this.dirty = this.lazy; // for lazy watchers
-    this.deps = [];
-    this.newDeps = [];
+
+    this.deps = [];//防止‘多次’求值的过程中的重复收集依赖
     this.depIds = new _Set();
+
+    this.newDeps = [];//防止‘一次’求值的过程中的重复收集依赖（一个属性调用使用两次）
     this.newDepIds = new _Set();
+
     this.expression = expOrFn.toString();
     // parse expression for getter
     if (typeof expOrFn === 'function') {
@@ -3582,7 +3589,7 @@
     key,
     userDef
   ) {
-    var shouldCache = !isServerRendering();
+    var shouldCache = !isServerRendering();// 非服务端渲染
     if (typeof userDef === 'function') {
       sharedPropertyDefinition.get = shouldCache
         ? createComputedGetter(key)
@@ -4695,9 +4702,9 @@
         initInternalComponent(vm, options);
       } else {
         vm.$options = mergeOptions(
-          resolveConstructorOptions(vm.constructor),
-          options || {},
-          vm
+          resolveConstructorOptions(vm.constructor),// parent
+          options || {},// child
+          vm//vm
         );
       }
       /* istanbul ignore else */
@@ -4812,11 +4819,11 @@
     this._init(options);
   }
 
-  initMixin(Vue);
-  stateMixin(Vue);
-  eventsMixin(Vue);
-  lifecycleMixin(Vue);
-  renderMixin(Vue);
+  initMixin(Vue);//定义了_init的方法
+  stateMixin(Vue);// 定义了三个方法 set delete watch
+  eventsMixin(Vue);// 添加了4个方法 on once off emit
+  lifecycleMixin(Vue);// 定义了三个方法 _update forceUpdate destroy
+  renderMixin(Vue);// 添加了一系列的方法 以及_render nextTick
 
   /*  */
 
@@ -5147,7 +5154,7 @@
 
     extend(Vue.options.components, builtInComponents);
 
-    initUse(Vue);
+    initUse(Vue);// 定义了use方法
     initMixin$1(Vue);
     initExtend(Vue);
     initAssetRegisters(Vue);
@@ -8819,6 +8826,7 @@
 
   // Elements that you can, intentionally, leave open
   // (and which close themselves)
+  // 省略结束标签的标签的非一元标签
   var canBeLeftOpenTag = makeMap(
     'colgroup,dd,dt,li,options,p,td,tfoot,th,thead,tr,source'
   );
@@ -8833,15 +8841,60 @@
     'title,tr,track'
   );
 
-  /**
-   * Not type-checking this file because it's mostly vendor code.
-   */
+  /*
+  // 固定的，不区分平台
+  function createCompileToFunctionFn(compile) {
+    return function compileToFunctions(CompilerOptions) {
+        compile(template, options)
+        //cacheStore
+    }
+  }
+
+  function createCompilerCreator(baseCompile) {
+    return function createCompiler(baseOptions) {
+        function compile(CompilerOptions) {
+            //finalOptions = merge(baseOptions,CompilerOptions)
+            return baseCompile(finalOptions)
+        }
+        return {
+            compile,
+            compileToFunctions:createCompileToFunctionFn(compile)
+        }
+    };
+  }
+
+  var createCompiler = createCompilerCreator(function baseCompile(compilerOptions) {
+    // parse() 生成ast
+    // generate()
+    return {ast, render, staticRenderFns}
+  });
+
+  // 根据平台区分
+  let {compile, compileToFunctions} = createCompiler(baseOptions);//基础选项
+
+  let {render,staticRenderFns} = compileToFunctions(compilerOptions);//自定义选项
+  */
 
   // Regular Expressions for parsing tags and attributes
   var attribute = /^\s*([^\s"'<>\/=]+)(?:\s*(=)\s*(?:"([^"]*)"+|'([^']*)'+|([^\s"'=<>`]+)))?/;
+  // class =    “test”
+  // class =    ’stest‘
+  // class = test
+  // disabled
+  // v-for = 'item in list'
+  //([^\s"'<>\/=]+)
+  // (=)
+  // "([^"]*)"+
+  // '([^']*)'+
+  // ([^\s"'=<>`]+)
   // could use https://www.w3.org/TR/1999/REC-xml-names-19990114/#NT-QName
   // but for Vue templates we can enforce a simple charset
-  var ncname = '[a-zA-Z_][\\w\\-\\.]*';
+  // <div></div> p textarea
+  // <x:link></x:link>
+  // >
+  // />
+  // </xxx aaa>
+  var ncname = '[a-zA-Z_][\\w\\-\\.]*'; // 标签命名规范（不能有:）
   var qnameCapture = "((?:" + ncname + "\\:)?" + ncname + ")";
   var startTagOpen = new RegExp(("^<" + qnameCapture));
   var startTagClose = /^\s*(\/?)>/;
@@ -8852,9 +8905,11 @@
   var conditionalComment = /^<!\[/;
 
   // Special Elements (can contain anything)
+  //是不是纯文本标签 不往下继续解析
   var isPlainTextElement = makeMap('script,style,textarea', true);
   var reCache = {};
 
+  // 对html进行解码
   var decodingMap = {
     '&lt;': '<',
     '&gt;': '>',
@@ -8863,33 +8918,55 @@
     '&#10;': '\n',
     '&#9;': '\t'
   };
-  var encodedAttr = /&(?:lt|gt|quot|amp);/g;
-  var encodedAttrWithNewLines = /&(?:lt|gt|quot|amp|#10|#9);/g;
+
+  /*
+    <div id="link-box">
+    //注意 href 属性值，链接后面加了一个换行
+    <a href="http://hcysun.me
+    ">aaaa</a>
+    //注意 href 属性值，链接后面加了一个Tab
+    <a href="http://hcysun.me	">bbbb</a>
+  </div>
+  */
+  var encodedAttr = /&(?:lt|gt|quot|amp);/g; // ?
+  var encodedAttrWithNewLines = /&(?:lt|gt|quot|amp|#10|#9);/g; //?
 
   // #5992
   var isIgnoreNewlineTag = makeMap('pre,textarea', true);
   var shouldIgnoreFirstNewline = function (tag, html) { return tag && isIgnoreNewlineTag(tag) && html[0] === '\n'; };
+  /*
+  //以下这两种写法其实是一样的
+   <pre>内容</pre>
 
+   <pre>
+    内容</pre>
+   */
   function decodeAttr (value, shouldDecodeNewlines) {
     var re = shouldDecodeNewlines ? encodedAttrWithNewLines : encodedAttr;
     return value.replace(re, function (match) { return decodingMap[match]; })
   }
 
   function parseHTML (html, options) {
-    var stack = [];
+    //<article><section><div><h1></section></article>
+    // <div><p></p></div>
+    var stack = [];//用于判断非一元标签是否缺少闭合标签
     var expectHTML = options.expectHTML;
-    var isUnaryTag$$1 = options.isUnaryTag || no;
-    var canBeLeftOpenTag$$1 = options.canBeLeftOpenTag || no;
-    var index = 0;
-    var last, lastTag;
+    var isUnaryTag$$1 = options.isUnaryTag || no; //是否是一元标签
+    var canBeLeftOpenTag$$1 = options.canBeLeftOpenTag || no; //是否是可以省略闭合标签的非一元标签
+    var index = 0; //当前字符流的读入位置
+    var last, lastTag; // 剩余html字符串   栈顶的元素
     while (html) {
       last = html;
       // Make sure we're not in a plaintext content element like script/style
       if (!lastTag || !isPlainTextElement(lastTag)) {
+        // lastTag && isPlainTextElement(lastTag)
+        //当前我们正在处理的是纯文本标签里面的内容
+        // 非纯本文标签
         var textEnd = html.indexOf('<');
         if (textEnd === 0) {
           // Comment:
           if (comment.test(html)) {
+            // <!-- -->
             var commentEnd = html.indexOf('-->');
 
             if (commentEnd >= 0) {
@@ -8903,6 +8980,7 @@
 
           // http://en.wikipedia.org/wiki/Conditional_comment#Downlevel-revealed_conditional_comment
           if (conditionalComment.test(html)) {
+            //<![ ]>
             var conditionalEnd = html.indexOf(']>');
 
             if (conditionalEnd >= 0) {
@@ -8914,11 +8992,13 @@
           // Doctype:
           var doctypeMatch = html.match(doctype);
           if (doctypeMatch) {
+            //<!DOCTYPE >
             advance(doctypeMatch[0].length);
             continue
           }
 
-          // End tag:
+          // End tag:</xxx>
+
           var endTagMatch = html.match(endTag);
           if (endTagMatch) {
             var curIndex = index;
@@ -8929,7 +9009,7 @@
 
           // Start tag:
           var startTagMatch = parseStartTag();
-          if (startTagMatch) {
+          if (startTagMatch) {//<xxx>
             handleStartTag(startTagMatch);
             if (shouldIgnoreFirstNewline(startTagMatch.tagName, html)) {
               advance(1);
@@ -8939,8 +9019,13 @@
         }
 
         var text = (void 0), rest = (void 0), next = (void 0);
+        // < 2
+        // 1<11112<222<div></div>
         if (textEnd >= 0) {
+          //第一个字符是 < 但没有成功匹配标签，或第一个字符不是 < 的字符串
           rest = html.slice(textEnd);
+          // console.log(rest)
+          // console.log(endTag.test(rest),startTagOpen.test(rest),comment.test(rest),conditionalComment.test(rest))
           while (
             !endTag.test(rest) &&
             !startTagOpen.test(rest) &&
@@ -8965,13 +9050,22 @@
         if (options.chars && text) {
           options.chars(text);
         }
-      } else {
+      } else {//当前我们正在处理的是纯文本标签里面的内容
+        // lastTag && isPlainTextElement(lastTag)
         var endTagLength = 0;
         var stackedTag = lastTag.toLowerCase();
+
+
         var reStackedTag = reCache[stackedTag] || (reCache[stackedTag] = new RegExp('([\\s\\S]*?)(</' + stackedTag + '[^>]*>)', 'i'));
         var rest$1 = html.replace(reStackedTag, function (all, text, endTag) {
+          // all 整个字符串
+          // text 第一个捕获组
+          // endTag 结束标签
           endTagLength = endTag.length;
+          // <textarea><!--aaa--></textarea>
+          // <textarea>aaa</textarea>aaa
           if (!isPlainTextElement(stackedTag) && stackedTag !== 'noscript') {
+            // ????
             text = text
               .replace(/<!\--([\s\S]*?)-->/g, '$1') // #7298
               .replace(/<!\[CDATA\[([\s\S]*?)]]>/g, '$1');
@@ -8989,7 +9083,7 @@
         parseEndTag(stackedTag, index - endTagLength, index);
       }
 
-      if (html === last) {
+      if (html === last) {//纯文本对待
         options.chars && options.chars(html);
         if (!stack.length && options.warn) {
           options.warn(("Mal-formatted tag at end of template: \"" + html + "\""));
@@ -9000,7 +9094,6 @@
 
     // Clean up any remaining tags
     parseEndTag();
-
     function advance (n) {
       index += n;
       html = html.substring(n);
@@ -9016,11 +9109,15 @@
         };
         advance(start[0].length);
         var end, attr;
+        //  class="test" v-for='item in list' disabled ></div>
+        // 没有匹配到开始标签的结束部分，并且匹配到了开始标签中的属性
         while (!(end = html.match(startTagClose)) && (attr = html.match(attribute))) {
           advance(attr[0].length);
           match.attrs.push(attr);
         }
         if (end) {
+          // <div></div>  <br />
+          // <mycoponet/>
           match.unarySlash = end[1];
           advance(end[0].length);
           match.end = index;
@@ -9034,24 +9131,36 @@
       var unarySlash = match.unarySlash;
 
       if (expectHTML) {
+        // 为了和浏览器的行为保持一致
         if (lastTag === 'p' && isNonPhrasingTag(tagName)) {
+          // <p></p><h2></h2><p></p>
           parseEndTag(lastTag);
         }
         if (canBeLeftOpenTag$$1(tagName) && lastTag === tagName) {
+          //<p>1111
+          //<p><p>one</p>
+          //<p>two
           parseEndTag(tagName);
         }
       }
-
-      var unary = isUnaryTag$$1(tagName) || !!unarySlash;
+      // <my-component />
+      var unary = isUnaryTag$$1(tagName) || !!unarySlash;//是否是一元标签
 
       var l = match.attrs.length;
       var attrs = new Array(l);
       for (var i = 0; i < l; i++) {
         var args = match.attrs[i];
+        // if (IS_REGEX_CAPTURING_BROKEN && args[0].indexOf('""') === -1) {
+        //   if (args[3] === '') { delete args[3]; }
+        //   if (args[4] === '') { delete args[4]; }
+        //   if (args[5] === '') { delete args[5]; }
+        // }
         var value = args[3] || args[4] || args[5] || '';
         var shouldDecodeNewlines = tagName === 'a' && args[1] === 'href'
           ? options.shouldDecodeNewlinesForHref
           : options.shouldDecodeNewlines;
+          // 返回的是boolean
+          // 用于标识是否需要对属性值中的换行符或制表符做兼容处理
         attrs[i] = {
           name: args[1],
           value: decodeAttr(value, shouldDecodeNewlines)
@@ -9063,17 +9172,23 @@
         lastTag = tagName;
       }
 
-      if (options.start) {
+      if (options.start) {// 对外的钩子函数
         options.start(tagName, attrs, unary, match.start, match.end);
       }
     }
-
+    // parseEndTag
     function parseEndTag (tagName, start, end) {
+      // 检测是否缺少闭合标签
+      // 处理 stack 栈中剩余的标签
+      // 解析 </br> 与 </p> 标签，与浏览器的行为相同
       var pos, lowerCasedTagName;
       if (start == null) { start = index; }
       if (end == null) { end = index; }
 
       // Find the closest opened tag of the same type
+      //<section><div><p><span></div></section>
+      // parseEndTag()
+      // <p>111
       if (tagName) {
         lowerCasedTagName = tagName.toLowerCase();
         for (pos = stack.length - 1; pos >= 0; pos--) {
@@ -9092,6 +9207,7 @@
           if (i > pos || !tagName &&
             options.warn
           ) {
+            // console.log('11111')
             options.warn(
               ("tag <" + (stack[i].tag) + "> has no matching end tag.")
             );
@@ -9105,6 +9221,9 @@
         stack.length = pos;
         lastTag = pos && stack[pos - 1].tag;
       } else if (lowerCasedTagName === 'br') {
+        //</div>
+        // </br>
+        // </p>
         if (options.start) {
           options.start(tagName, [], true, start, end);
         }
@@ -9123,14 +9242,23 @@
 
   var onRE = /^@|^v-on:/;
   var dirRE = /^v-|^@|^:/;
+  // export const forAliasRE = /([^]*?)\s+(?:in|of)\s+([^]*)/
+  // <div v-for="obj of list"></div>
+  // <div v-for="(obj, index, key) of list"></div>
   var forAliasRE = /([\s\S]*?)\s+(?:in|of)\s+([\s\S]*)/;
+  // obj, index, key
   var forIteratorRE = /,([^,\}\]]*)(?:,([^,\}\]]*))?$/;
+  // 去左右括号
   var stripParensRE = /^\(|\)$/g;
 
+  //<div v-on:click.stop="handleClick"></div>
   var argRE = /:(.*)$/;
   var bindRE = /^:|^v-bind:/;
+  // 修饰符
   var modifierRE = /\.[^.]+/g;
 
+  // he.decode('&#x26;')
+  // &
   var decodeHTMLCached = cached(he.decode);
 
   // configurable state
@@ -9180,12 +9308,13 @@
     delimiters = options.delimiters;
 
     var stack = [];
+    //是否放弃标签之间的空格
     var preserveWhitespace = options.preserveWhitespace !== false;
     var root;
     var currentParent;
-    var inVPre = false;
-    var inPre = false;
-    var warned = false;
+    var inVPre = false; //是否在拥有 v-pre 的标签之内
+    var inPre = false; //是否在 <pre></pre> 标签之内
+    var warned = false; // 只会打印一次警告信息
 
     function warnOnce (msg) {
       if (!warned) {
@@ -9207,7 +9336,6 @@
         postTransforms[i](element, options);
       }
     }
-
     parseHTML(template, {
       warn: warn$2,
       expectHTML: options.expectHTML,
@@ -9216,7 +9344,7 @@
       shouldDecodeNewlines: options.shouldDecodeNewlines,
       shouldDecodeNewlinesForHref: options.shouldDecodeNewlinesForHref,
       shouldKeepComment: options.comments,
-      start: function start (tag, attrs, unary) {
+      start: function start (tag, attrs, unary) {//开始标签
         // check namespace.
         // inherit parent ns if there is one
         var ns = (currentParent && currentParent.ns) || platformGetTagNamespace(tag);
@@ -9224,6 +9352,8 @@
         // handle IE svg bug
         /* istanbul ignore if */
         if (isIE && ns === 'svg') {
+          // <svg xmlns:feature="http://www.openplans.org/topp"></svg>
+          // <svg xmlns:NS1="" NS1:xmlns:feature="http://www.openplans.org/topp"></svg>
           attrs = guardIESVGBug(attrs);
         }
 
@@ -9261,12 +9391,15 @@
           // structural directives
           processFor(element);
           processIf(element);
+          // v-one
           processOnce(element);
           // element-scope stuff
           processElement(element, options);
         }
 
         function checkRootConstraints (el) {
+          // 仅有一个被渲染的根元素
+          // 不能使用 slot 标签和 template 标签作为模板的根元素
           {
             if (el.tag === 'slot' || el.tag === 'template') {
               warnOnce(
@@ -9323,7 +9456,7 @@
         }
       },
 
-      end: function end () {
+      end: function end () {//结束标签
         // remove trailing whitespace
         var element = stack[stack.length - 1];
         var lastNode = element.children[element.children.length - 1];
@@ -9336,7 +9469,7 @@
         closeElement(element);
       },
 
-      chars: function chars (text) {
+      chars: function chars (text) {//纯文本
         if (!currentParent) {
           {
             if (text === template) {
@@ -9381,7 +9514,7 @@
           }
         }
       },
-      comment: function comment (text) {
+      comment: function comment (text) {//注释节点
         currentParent.children.push({
           type: 3,
           text: text,
@@ -9478,6 +9611,7 @@
 
   function parseFor (exp) {
     var inMatch = exp.match(forAliasRE);
+    // 匹配失败返回null
     if (!inMatch) { return }
     var res = {};
     res.for = inMatch[2].trim();
@@ -9893,15 +10027,15 @@
 
   var baseOptions = {
     expectHTML: true,
-    modules: modules$1,
-    directives: directives$1,
-    isPreTag: isPreTag,
-    isUnaryTag: isUnaryTag,
-    mustUseProp: mustUseProp,
-    canBeLeftOpenTag: canBeLeftOpenTag,
-    isReservedTag: isReservedTag,
-    getTagNamespace: getTagNamespace,
-    staticKeys: genStaticKeys(modules$1)
+    modules: modules$1,// arr [klass,style,model]
+    directives: directives$1, // {model: function(){},html: function(){},text: function(){}}
+    isPreTag: isPreTag,// 检查标签是否是 'pre'
+    isUnaryTag: isUnaryTag,// 标签是否是一元标签
+    mustUseProp: mustUseProp, // 是否要使用 props 进行绑定
+    canBeLeftOpenTag: canBeLeftOpenTag,// 虽然不是一元标签，但却可以自己补全并闭合的标签
+    isReservedTag: isReservedTag,// 是否是保留的标签
+    getTagNamespace: getTagNamespace,// 获取元素(标签)的命名空间
+    staticKeys: genStaticKeys(modules$1) // 作用是根据编译器选项的 modules 选项生成一个静态键字符串
   };
 
   /*  */
@@ -10893,7 +11027,7 @@
               (baseOptions.modules || []).concat(options.modules);
           }
           // merge custom directives
-          if (options.directives) {
+          if (options.directives) {// 对象
             finalOptions.directives = extend(
               Object.create(baseOptions.directives || null),
               options.directives
@@ -10932,6 +11066,7 @@
     template,
     options
   ) {
+    // finalOptions
     var ast = parse(template.trim(), options);
     if (options.optimize !== false) {
       optimize(ast, options);
@@ -11019,7 +11154,6 @@
         if (config.performance && mark) {
           mark('compile');
         }
-
         var ref = compileToFunctions(template, {
           shouldDecodeNewlines: shouldDecodeNewlines,
           shouldDecodeNewlinesForHref: shouldDecodeNewlinesForHref,

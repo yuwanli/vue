@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>demo</title>
+    <!-- Delete ".min" for console warnings in development -->
+    <script src="../../dist/vue.js"></script>
+  </head>
+  <body>
+      <p><h1></h1></p>
+      <!-- <div id="app">
+        <a href=""><div><a href=""></a></div><a href=""></a></a>
+          <p><source>
+      </div> -->
+    <script>
+      new Vue({
+        el: '#app',
+        data: {
+          message: '...',
+          obj: {
+            a: '1',
+            b: '2'
+          },
+          test: [
+            {a:1},
+            2
+          ]
+        },
+        methods: {
+        },
+        created() {
+          console.log(this)
+          console.log(this.test)
+          setTimeout(() => {
+            // this.test[0].a = 2
+            // this.test[1] = 5
+            this.$set(this.test,1,5)
+            console.log(this.test)
+          },1000)
+        }
+      })
+    </script>
+
+  </body>
+</html>

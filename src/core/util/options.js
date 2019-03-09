@@ -192,8 +192,8 @@ strats.watch = function (
   key: string
 ): ?Object {
   // work around Firefox's Object.prototype.watch...
-  if (parentVal === nativeWatch) parentVal = undefined
-  if (childVal === nativeWatch) childVal = undefined
+  if (parentVal === nativeWatch) parentVal = undefined //父对象无watch属性（兼容Firefox存在默认的watch属性的情况）
+  if (childVal === nativeWatch) childVal = undefined //子对象无watch属性（兼容Firefox存在默认的watch属性的情况）
   /* istanbul ignore if */
   if (!childVal) return Object.create(parentVal || null)
   if (process.env.NODE_ENV !== 'production') {
@@ -382,7 +382,7 @@ export function mergeOptions (
   normalizeProps(child, vm)
   normalizeInject(child, vm)
   normalizeDirectives(child)
-  
+
   // Apply extends and mixins on the child options,
   // but only if it is a raw options object that isn't
   // the result of another mergeOptions call.
@@ -401,14 +401,17 @@ export function mergeOptions (
   const options = {}
   let key
   for (key in parent) {
-    mergeField(key)
+    mergeField(key)//父对象中存在的属性进行合并
   }
   for (key in child) {
     if (!hasOwn(parent, key)) {
-      mergeField(key)
+      mergeField(key)//子对象中特有的属性进行合并
     }
   }
+  // 结果就是：既拥有扶对象的属性也有自对象的属性
   function mergeField (key) {
+    // 不同的属性的的合并策略不一样
+    // 默认策略就是：子属性覆盖父属性
     const strat = strats[key] || defaultStrat
     options[key] = strat(parent[key], child[key], vm, key)
   }

@@ -67,7 +67,7 @@ Vue.component('item', {
 })
 
 // boot up the demo
-var demo = new Vue({
+var w = new Vue({
   el: '#demo',
   data: {
     treeData: data

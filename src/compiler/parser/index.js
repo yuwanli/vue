@@ -21,14 +21,23 @@ import {
 
 export const onRE = /^@|^v-on:/
 export const dirRE = /^v-|^@|^:/
+// export const forAliasRE = /([^]*?)\s+(?:in|of)\s+([^]*)/
+// <div v-for="obj of list"></div>
+// <div v-for="(obj, index, key) of list"></div>
 export const forAliasRE = /([\s\S]*?)\s+(?:in|of)\s+([\s\S]*)/
+// obj, index, key
 export const forIteratorRE = /,([^,\}\]]*)(?:,([^,\}\]]*))?$/
+// 去左右括号
 const stripParensRE = /^\(|\)$/g
 
+//<div v-on:click.stop="handleClick"></div>
 const argRE = /:(.*)$/
 export const bindRE = /^:|^v-bind:/
+// 修饰符
 const modifierRE = /\.[^.]+/g
 
+// he.decode('&#x26;')
+// &
 const decodeHTMLCached = cached(he.decode)
 
 // configurable state
@@ -78,12 +87,13 @@ export function parse (
   delimiters = options.delimiters
 
   const stack = []
+  //是否放弃标签之间的空格
   const preserveWhitespace = options.preserveWhitespace !== false
   let root
   let currentParent
-  let inVPre = false
-  let inPre = false
-  let warned = false
+  let inVPre = false //是否在拥有 v-pre 的标签之内
+  let inPre = false //是否在 <pre></pre> 标签之内
+  let warned = false // 只会打印一次警告信息
 
   function warnOnce (msg) {
     if (!warned) {
@@ -105,7 +115,6 @@ export function parse (
       postTransforms[i](element, options)
     }
   }
-
   parseHTML(template, {
     warn,
     expectHTML: options.expectHTML,
@@ -114,7 +123,7 @@ export function parse (
     shouldDecodeNewlines: options.shouldDecodeNewlines,
     shouldDecodeNewlinesForHref: options.shouldDecodeNewlinesForHref,
     shouldKeepComment: options.comments,
-    start (tag, attrs, unary) {
+    start (tag, attrs, unary) {//开始标签
       // check namespace.
       // inherit parent ns if there is one
       const ns = (currentParent && currentParent.ns) || platformGetTagNamespace(tag)
@@ -122,6 +131,8 @@ export function parse (
       // handle IE svg bug
       /* istanbul ignore if */
       if (isIE && ns === 'svg') {
+        // <svg xmlns:feature="http://www.openplans.org/topp"></svg>
+        // <svg xmlns:NS1="" NS1:xmlns:feature="http://www.openplans.org/topp"></svg>
         attrs = guardIESVGBug(attrs)
       }
 
@@ -156,15 +167,19 @@ export function parse (
       if (inVPre) {
         processRawAttrs(element)
       } else if (!element.processed) {
+        // processed 是否被解析过
         // structural directives
         processFor(element)
         processIf(element)
-        processOnce(element)
+        processOnce(element)// v-once
+
         // element-scope stuff
         processElement(element, options)
       }
 
       function checkRootConstraints (el) {
+        // 仅有一个被渲染的根元素
+        // 不能使用 slot 标签和 template 标签作为模板的根元素
         if (process.env.NODE_ENV !== 'production') {
           if (el.tag === 'slot' || el.tag === 'template') {
             warnOnce(
@@ -221,7 +236,7 @@ export function parse (
       }
     },
 
-    end () {
+    end () {//结束标签
       // remove trailing whitespace
       const element = stack[stack.length - 1]
       const lastNode = element.children[element.children.length - 1]
@@ -234,7 +249,7 @@ export function parse (
       closeElement(element)
     },
 
-    chars (text: string) {
+    chars (text: string) {//纯文本
       if (!currentParent) {
         if (process.env.NODE_ENV !== 'production') {
           if (text === template) {
@@ -279,7 +294,7 @@ export function parse (
         }
       }
     },
-    comment (text: string) {
+    comment (text: string) {//注释节点
       currentParent.children.push({
         type: 3,
         text,
@@ -295,7 +310,7 @@ function processPre (el) {
     el.pre = true
   }
 }
-
+// <div v-pre v-on:click="handleClick"></div>
 function processRawAttrs (el) {
   const l = el.attrsList.length
   if (l) {
@@ -317,6 +332,9 @@ export function processElement (element: ASTElement, options: CompilerOptions) {
 
   // determine whether this is a plain element after
   // removing structural attributes
+  // 结构化属性
+  // for if once
+  // 经过一系列的处理之后仍无属性节点
   element.plain = !element.key && !element.attrsList.length
 
   processRef(element)
@@ -328,6 +346,9 @@ export function processElement (element: ASTElement, options: CompilerOptions) {
   processAttrs(element)
 }
 
+// <div key="id"></div> => el.key = JSON.stringify('id')
+// <div :key="id"></div> => el.key = 'id'
+// <div :key="id | featId"></div> => el.key = '_f("featId")(id)'
 function processKey (el) {
   const exp = getBindingAttr(el, 'key')
   if (exp) {
@@ -360,6 +381,7 @@ function processRef (el) {
 
 export function processFor (el: ASTElement) {
   let exp
+  // 此种写法值得借鉴
   if ((exp = getAndRemoveAttr(el, 'v-for'))) {
     const res = parseFor(exp)
     if (res) {
@@ -381,6 +403,8 @@ type ForParseResult = {
 
 export function parseFor (exp: string): ?ForParseResult {
   const inMatch = exp.match(forAliasRE)
+  // 匹配失败返回null
+  // '(item, index, key)  in list'
   if (!inMatch) return
   const res = {}
   res.for = inMatch[2].trim()
@@ -400,6 +424,8 @@ export function parseFor (exp: string): ?ForParseResult {
 
 function processIf (el) {
   const exp = getAndRemoveAttr(el, 'v-if')
+  // <div v-if></div>
+  // ''
   if (exp) {
     el.if = exp
     addIfCondition(el, {
@@ -465,7 +491,9 @@ function processOnce (el) {
 
 function processSlot (el) {
   if (el.tag === 'slot') {
+    // <slot name="header"></slot>
     el.slotName = getBindingAttr(el, 'name')
+    // slot 抽象组件上不可有key属性
     if (process.env.NODE_ENV !== 'production' && el.key) {
       warn(
         `\`key\` does not work on <slot> because slots are abstract outlets ` +
@@ -476,6 +504,8 @@ function processSlot (el) {
   } else {
     let slotScope
     if (el.tag === 'template') {
+      // <template scope=""></template>
+      // scope 属性和 slot-scope 属性是不能写成绑定的属性
       slotScope = getAndRemoveAttr(el, 'scope')
       /* istanbul ignore if */
       if (process.env.NODE_ENV !== 'production' && slotScope) {
@@ -489,6 +519,12 @@ function processSlot (el) {
       }
       el.slotScope = slotScope || getAndRemoveAttr(el, 'slot-scope')
     } else if ((slotScope = getAndRemoveAttr(el, 'slot-scope'))) {
+      // <div slot-scope="slotProps" v-for="item of slotProps.list"></div>
+      /*
+        <template slot-scope="slotProps">
+          <div v-for="item of slotProps.list"></div>
+        </template>
+      */
       /* istanbul ignore if */
       if (process.env.NODE_ENV !== 'production' && el.attrsMap['v-for']) {
         warn(
@@ -614,6 +650,13 @@ function processAttrs (el) {
 }
 
 function checkInFor (el: ASTElement): boolean {
+  /*
+  <div v-for="obj of list" :ref="obj.id"></div>
+
+  <div v-for="obj of list">
+    <div :ref="obj.id"></div>
+  </div>
+  */
   let parent = el
   while (parent) {
     if (parent.for !== undefined) {

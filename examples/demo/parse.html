@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>demo</title>
+    <!-- Delete ".min" for console warnings in development -->
+    <script src="../../dist/vue.js"></script>
+  </head>
+  <body>
+      <!-- </p> -->
+      <div id="test">
+        1<<23></23>
+      </div>
+      <div id="app">
+        <!--aaaaa-->
+          <p><p>one</p>
+        <div><p>{{test[0].a}}</p></div>
+      </div>
+    </div>
+
+    <script>
+      console.log(document.getElementById('test').innerHTML)
+      new Vue({
+        el: '#app',
+        // template: `<pre>内容</pre><style>pre{background-color: red;}</style>`,
+        // template: `<a,rticle><section><div><h1></section></article>`,
+        // template: `<div><p><p>one</p></div>`,
+        template: `<div><textarea><p><!--aaaa-->11111</p></textarea></div>`,
+        data: {
+          message: '...',
+          obj: {
+            a: '1',
+            b: '2'
+          },
+          test: [
+            {a:1},
+            2
+          ]
+        },
+        methods: {
+        },
+        created() {
+          // console.log(this)
+          // console.log(this.test)
+          setTimeout(() => {
+            // this.test[0].a = 2
+            // this.test[1] = 5
+            this.$set(this.test,1,5)
+            // console.log(this.test)
+          },1000)
+        }
+      })
+    </script>
+
+  </body>
+</html>
