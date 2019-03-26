@@ -1,5 +1,5 @@
 /* @flow */
-
+// 要么选择在编译阶段区分类型，要么就在运行时阶段区分类型
 /**
  * Expand input[v-model] with dyanmic type bindings into v-if-else chains
  * Turn this:
@@ -34,6 +34,7 @@ function preTransformNode (el: ASTElement, options: CompilerOptions) {
     if (map[':type'] || map['v-bind:type']) {
       typeBinding = getBindingAttr(el, 'type')
     }
+    // <input v-model="val" v-bind="{ type: inputType }" />
     if (!map.type && !typeBinding && map['v-bind']) {
       typeBinding = `(${map['v-bind']}).type`
     }
@@ -86,6 +87,7 @@ function preTransformNode (el: ASTElement, options: CompilerOptions) {
 }
 
 function cloneASTElement (el) {
+  // slice() 复制数组
   return createASTElement(el.tag, el.attrsList.slice(), el.parent)
 }
 

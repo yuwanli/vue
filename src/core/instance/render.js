@@ -51,6 +51,7 @@ export function initRender (vm: Component) {
 }
 
 export function renderMixin (Vue: Class<Component>) {
+
   // install runtime convenience helpers
   installRenderHelpers(Vue.prototype)
 
@@ -80,6 +81,7 @@ export function renderMixin (Vue: Class<Component>) {
       /* istanbul ignore else */
       if (process.env.NODE_ENV !== 'production' && vm.$options.renderError) {
         try {
+          // vm._renderProxy = vm
           vnode = vm.$options.renderError.call(vm._renderProxy, vm.$createElement, e)
         } catch (e) {
           handleError(e, vm, `renderError`)

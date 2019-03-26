@@ -14,10 +14,13 @@ export const createCompiler = createCompilerCreator(function baseCompile (
 ): CompiledResult {
   // finalOptions
   const ast = parse(template.trim(), options)
-  if (options.optimize !== false) {
-    optimize(ast, options)
+  console.log(ast)
+  if (options.optimize !== false) {// 使最优化
+    optimize(ast, options)//检测每一颗树是否是静态结点（生成之后DOM不会再改变）
   }
   const code = generate(ast, options)
+  console.log(code.render)
+  console.log('success')
   return {
     ast,
     render: code.render,

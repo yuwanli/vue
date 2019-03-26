@@ -43,6 +43,7 @@ export function generate (
   ast: ASTElement | void,
   options: CompilerOptions
 ): CodegenResult {
+
   const state = new CodegenState(options)
   const code = ast ? genElement(ast, state) : '_c("div")'
   return {
@@ -55,7 +56,6 @@ export function genElement (el: ASTElement, state: CodegenState): string {
   if (el.parent) {
     el.pre = el.pre || el.parent.pre
   }
-
   if (el.staticRoot && !el.staticProcessed) {
     return genStatic(el, state)
   } else if (el.once && !el.onceProcessed) {
@@ -300,19 +300,25 @@ export function genData (el: ASTElement, state: CodegenState): string {
 function genDirectives (el: ASTElement, state: CodegenState): string | void {
   const dirs = el.directives
   if (!dirs) return
+
   let res = 'directives:['
   let hasRuntime = false
   let i, l, dir, needRuntime
   for (i = 0, l = dirs.length; i < l; i++) {
     dir = dirs[i]
     needRuntime = true
+    // bind on cloak text html model
     const gen: DirectiveFunction = state.directives[dir.name]
     if (gen) {
+      // 控制 影响
       // compile-time directive that manipulates AST.
+      // 比对
       // returns true if it also needs a runtime counterpart.
+      // model -> true
       needRuntime = !!gen(el, dir, state.warn)
     }
     if (needRuntime) {
+      // 自定义 & model
       hasRuntime = true
       res += `{name:"${dir.name}",rawName:"${dir.rawName}"${
         dir.value ? `,value:(${dir.value}),expression:${JSON.stringify(dir.value)}` : ''

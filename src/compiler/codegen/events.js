@@ -96,6 +96,7 @@ function genHandler (
   const isFunctionExpression = fnExpRE.test(handler.value)
 
   if (!handler.modifiers) {
+    // @click="test"
     if (isMethodPath || isFunctionExpression) {
       return handler.value
     }
@@ -103,6 +104,7 @@ function genHandler (
     if (__WEEX__ && handler.params) {
       return genWeexHandler(handler.params, handler.value)
     }
+    // @click="test(aaa)"
     return `function($event){${handler.value}}` // inline statement
   } else {
     let code = ''

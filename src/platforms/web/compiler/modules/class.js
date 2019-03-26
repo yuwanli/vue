@@ -11,6 +11,7 @@ function transformNode (el: ASTElement, options: CompilerOptions) {
   const warn = options.warn || baseWarn
   const staticClass = getAndRemoveAttr(el, 'class')
   if (process.env.NODE_ENV !== 'production' && staticClass) {
+    // <div class="{{ isActive ? 'active' : '' }}"></div>
     const res = parseText(staticClass, options.delimiters)
     if (res) {
       warn(

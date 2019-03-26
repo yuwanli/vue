@@ -66,6 +66,7 @@ export function lifecycleMixin (Vue: Class<Component>) {
     // based on the rendering backend used.
     if (!prevVnode) {
       // initial render
+      // __patch__  ->  web/runtime/index.js
       vm.$el = vm.__patch__(vm.$el, vnode, hydrating, false /* removeOnly */)
     } else {
       // updates
@@ -165,7 +166,6 @@ export function mountComponent (
     }
   }
   callHook(vm, 'beforeMount')
-
   let updateComponent
   /* istanbul ignore if */
   if (process.env.NODE_ENV !== 'production' && config.performance && mark) {
@@ -186,6 +186,7 @@ export function mountComponent (
       measure(`vue ${name} patch`, startTag, endTag)
     }
   } else {
+    // _render render.js
     updateComponent = () => {
       vm._update(vm._render(), hydrating)
     }

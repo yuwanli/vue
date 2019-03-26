@@ -16,7 +16,7 @@ type TextParseResult = {
   expression: string,
   tokens: Array<string | { '@binding': string }>
 }
-
+// abc{{name}}def
 export function parseText (
   text: string,
   delimiters?: [string, string]
@@ -48,6 +48,6 @@ export function parseText (
   }
   return {
     expression: tokens.join('+'),
-    tokens: rawTokens
+    tokens: rawTokens // for weex
   }
 }

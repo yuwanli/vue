@@ -7,6 +7,7 @@ export function baseWarn (msg: string) {
   console.error(`[Vue compiler]: ${msg}`)
 }
 
+// [1,2,undefined].filter(_ => _) => [1,2]
 export function pluckModuleFunction<F: Function> (
   modules: ?Array<Object>,
   key: string
@@ -70,19 +71,24 @@ export function addHandler (
   // the only target envs that have right/middle clicks.
   if (name === 'click') {
     if (modifiers.right) {
+      // 鼠标右键事件
       name = 'contextmenu'
       delete modifiers.right
     } else if (modifiers.middle) {
+      // 鼠标滚轮事件
       name = 'mouseup'
     }
   }
 
   // check capture modifier
   if (modifiers.capture) {
+    // 即元素自身触发的事件先在此处理，然后才交由内部元素进行处理
     delete modifiers.capture
     name = '!' + name // mark the event as captured
   }
   if (modifiers.once) {
+    // <div @click.once="handleClick"></div>
+    // <div @~click="handleClick"></div>
     delete modifiers.once
     name = '~' + name // mark the event as once
   }
@@ -110,10 +116,19 @@ export function addHandler (
   const handlers = events[name]
   /* istanbul ignore if */
   if (Array.isArray(handlers)) {
+    // <div @click.prevent="handleClick1" @click="handleClick2" @click.self="handleClick3"></div>
     important ? handlers.unshift(newHandler) : handlers.push(newHandler)
   } else if (handlers) {
+    // <div @click.prevent="handleClick1" @click="handleClick2"></div>
     events[name] = important ? [newHandler, handlers] : [handlers, newHandler]
   } else {
+    // <div @click.once="handleClick"></div>
+    /*
+      '~click': {
+        value: 'handleClick',
+        modifiers: {}
+      }
+    */
     events[name] = newHandler
   }
 
@@ -122,6 +137,8 @@ export function addHandler (
 
 // <my-component key=true></my-component>
 // <my-component :key='aaa'></my-component>
+// <my-component key='aaa'></my-component>
+
 export function getBindingAttr (
   el: ASTElement,
   name: string,

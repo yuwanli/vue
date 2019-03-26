@@ -3,6 +3,7 @@
 import { cached, extend, toObject } from 'shared/util'
 
 export const parseStyleText = cached(function (cssText) {
+  //<div style="color: red; background: url(www.xxx.com?a=1&amp;copy=3);"></div>
   const res = {}
   const listDelimiter = /;(?![^(]*\))/g
   const propertyDelimiter = /:(.+)/

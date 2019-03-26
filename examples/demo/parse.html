@@ -8,26 +8,70 @@
   </head>
   <body>
       <!-- </p> -->
-      <div id="test">
+      <!-- <div id="test">
         1<<23></23>
-      </div>
+      </div> -->
       <div id="app">
-        <!--aaaaa-->
-          <p><p>one</p>
-        <div><p>{{test[0].a}}</p></div>
+
+        <div v-for="item of list">
+          <input v-model="item.item" />
+          <div>
+            <p></p>
+          </div>
+          <p></p>
+        </div>
+
+
+        <p v-if="test1">1</p>
+        <p v-else-if="test2">2</p>
+        <p v-else></p>
+        <p>1111</p>
       </div>
     </div>
 
     <script>
-      console.log(document.getElementById('test').innerHTML)
       new Vue({
         el: '#app',
-        // template: `<pre>内容</pre><style>pre{background-color: red;}</style>`,
+        // template: `
+        //   <div>
+        //     <div>
+        //       <ul ref="ul" key="ul">
+        //         <li v-for="(item,index) in list">{{item.item}}{{index}}</li>
+        //       </ul>
+        //       <div class="test1"><p>1111</p></div>
+        //       <div class="test2"><p>{{str}}</p></div>
+        //     </div>
+        //     <div v-if="test1" @click="testFn" v-on:test="test2" v-focus="test1"><p>{{message}}</p></div>
+        //     <div v-else><p>2222</p></div>
+        //     <input v-focus="test2" v-model="str">
+        //     <p v-text="message"></p>
+        //     <p v-html="message" v-bind:test="testFn" v-focus="test1"></p>
+        //     <slot>
+        //       <p>1111112222</p>
+        //     </slot>
+        //   </div>
+        // `,
+        template: `
+          <div class="test1">
+            <div @click="testFn2"  class="test2">
+              <p @click.stop="testFn" @click.native.prevent.stop="testFn2">
+                <span @click.stop="testFn2"></span>
+              </p>
+
+            </div>
+          </div>
+        `,
         // template: `<a,rticle><section><div><h1></section></article>`,
         // template: `<div><p><p>one</p></div>`,
-        template: `<div><textarea><p><!--aaaa-->11111</p></textarea></div>`,
+        // template: `<div><textarea><p><!--aaaa-->11111</p></textarea></div>`,
         data: {
+          str: 'number',
+          test1: true,
+          test2: false,
           message: '...',
+          list: [{ item: 1 },
+      { item: 2 },
+      { item: 3 },],
           obj: {
             a: '1',
             b: '2'
@@ -38,16 +82,28 @@
           ]
         },
         methods: {
+          testFn() {
+
+          },
+          testFn2() {
+
+          }
         },
         created() {
           // console.log(this)
           // console.log(this.test)
+          // setTimeout(() => {
+          //   // this.test[0].a = 2
+          //   // this.test[1] = 5
+          //   this.$set(this.test,1,5)
+          //   // console.log(this.test)
+          // },1000)
           setTimeout(() => {
-            // this.test[0].a = 2
-            // this.test[1] = 5
-            this.$set(this.test,1,5)
-            // console.log(this.test)
+            this.test1 = !this.test1
           },1000)
+        },
+        mounted() {
+          // console.log(document.getElementById('test').attributes)
         }
       })
     </script>

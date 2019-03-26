@@ -111,6 +111,7 @@ export function parse (
       inPre = false
     }
     // apply post-transforms
+    // 非一元标签的结束标签或遇到一元标签
     for (let i = 0; i < postTransforms.length; i++) {
       postTransforms[i](element, options)
     }
@@ -238,6 +239,7 @@ export function parse (
 
     end () {//结束标签
       // remove trailing whitespace
+      // <div><span>test</span> <!-- 空白占位 -->  </div>
       const element = stack[stack.length - 1]
       const lastNode = element.children[element.children.length - 1]
       if (lastNode && lastNode.type === 3 && lastNode.text === ' ' && !inPre) {
@@ -251,6 +253,11 @@ export function parse (
 
     chars (text: string) {//纯文本
       if (!currentParent) {
+        /*
+        <template>
+          <div>根元素内的文本节点</div>根元素外的文本节点
+        </template>
+        */
         if (process.env.NODE_ENV !== 'production') {
           if (text === template) {
             warnOnce(
@@ -270,6 +277,13 @@ export function parse (
         currentParent.tag === 'textarea' &&
         currentParent.attrsMap.placeholder === text
       ) {
+        /*
+        <textarea placeholder="some placeholder..."></textarea>
+
+        innerHTML====>>>>>>
+
+        <textarea placeholder="some placeholder...">some placeholder...</textarea>
+        */
         return
       }
       const children = currentParent.children
@@ -343,6 +357,7 @@ export function processElement (element: ASTElement, options: CompilerOptions) {
   for (let i = 0; i < transforms.length; i++) {
     element = transforms[i](element, options) || element
   }
+  // v-text、v-html、v-show、v-on、v-bind、v-model、v-cloak
   processAttrs(element)
 }
 
@@ -519,8 +534,9 @@ function processSlot (el) {
       }
       el.slotScope = slotScope || getAndRemoveAttr(el, 'slot-scope')
     } else if ((slotScope = getAndRemoveAttr(el, 'slot-scope'))) {
-      // <div slot-scope="slotProps" v-for="item of slotProps.list"></div>
+      //bad  <div slot-scope="slotProps" v-for="item of slotProps.list"></div>
       /*
+        good
         <template slot-scope="slotProps">
           <div v-for="item of slotProps.list"></div>
         </template>
@@ -541,6 +557,7 @@ function processSlot (el) {
       el.slotTarget = slotTarget === '""' ? '"default"' : slotTarget
       // preserve slot as an attribute for native shadow DOM compat
       // only for non-scoped slots.
+      // 原生html有slot属性 属性保留
       if (el.tag !== 'template' && !el.slotScope) {
         addAttr(el, 'slot', slotTarget)
       }
@@ -568,6 +585,7 @@ function processAttrs (el) {
       // mark element as dynamic
       el.hasBindings = true
       // modifiers
+      // sync camel prop
       modifiers = parseModifiers(name)
       if (modifiers) {
         name = name.replace(modifierRE, '')
@@ -575,7 +593,7 @@ function processAttrs (el) {
       if (bindRE.test(name)) { // v-bind
         name = name.replace(bindRE, '')
         value = parseFilters(value)
-        isProp = false
+        isProp = false//原生属性
         if (
           process.env.NODE_ENV !== 'production' &&
           value.trim().length === 0
@@ -588,6 +606,7 @@ function processAttrs (el) {
           if (modifiers.prop) {
             isProp = true
             name = camelize(name)
+            // 特殊情况 驼峰 但是后面4位大写
             if (name === 'innerHtml') name = 'innerHTML'
           }
           if (modifiers.camel) {
@@ -601,6 +620,8 @@ function processAttrs (el) {
             )
           }
         }
+        // el.component 属性为假就能够保证标签没有使用 is 属性
+        // component在渲染的时候会替换tag,会影响判断
         if (isProp || (
           !el.component && platformMustUseProp(el.tag, el.attrsMap.type, name)
         )) {
@@ -610,8 +631,12 @@ function processAttrs (el) {
         }
       } else if (onRE.test(name)) { // v-on
         name = name.replace(onRE, '')
+        // 当前处理对象  属性名称  属性值  修饰符
         addHandler(el, name, value, modifiers, false, warn)
       } else { // normal directives
+        // v-html v-text v-show v-cloak v-model
+        // v-custom:arg.modif="myMethod"
+        // addDirective(el, 'custom', 'v-custom:arg.modif', 'myMethod', 'arg', { modif: true })
         name = name.replace(dirRE, '')
         // parse arg
         const argMatch = name.match(argRE)
@@ -625,8 +650,10 @@ function processAttrs (el) {
         }
       }
     } else {
+      //<div id="box" width="100px"></div>
       // literal attribute
       if (process.env.NODE_ENV !== 'production') {
+        //<div id="{{ isTrue ? 'a' : 'b' }}"></div>
         const res = parseText(value, delimiters)
         if (res) {
           warn(
@@ -640,9 +667,11 @@ function processAttrs (el) {
       addAttr(el, name, JSON.stringify(value))
       // #6887 firefox doesn't update muted state if set via attribute
       // even immediately after element creation
+      // 火狐浏览器中存在无法通过DOM元素的 setAttribute 方法为 video 标签添加 muted 属性的问题
       if (!el.component &&
           name === 'muted' &&
           platformMustUseProp(el.tag, el.attrsMap.type, name)) {
+        //元素描述对象的 el.props 数组中所存储的任何属性都会在由虚拟DOM创建真实DOM的过程中直接使用真实DOM对象添加
         addProp(el, name, 'true')
       }
     }
@@ -722,6 +751,22 @@ function guardIESVGBug (attrs) {
 }
 
 function checkForAliasModel (el, value) {
+  /*
+  [1,2,3]
+  <div v-for="item of list">
+    <input v-model="item" />
+  </div>
+
+
+  <div v-for="obj of list">
+    <input v-model="obj" />
+  </div>
+  [
+    { item: 1 },
+    { item: 2 },
+    { item: 3 },
+  ]
+  */
   let _el = el
   while (_el) {
     if (_el.for && _el.alias === value) {
