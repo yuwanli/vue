@@ -2772,6 +2772,7 @@
       // based on the rendering backend used.
       if (!prevVnode) {
         // initial render
+        // __patch__  ->  web/runtime/index.js
         vm.$el = vm.__patch__(vm.$el, vnode, hydrating, false /* removeOnly */);
       } else {
         // updates
@@ -2871,7 +2872,6 @@
       }
     }
     callHook(vm, 'beforeMount');
-
     var updateComponent;
     /* istanbul ignore if */
     if (config.performance && mark) {
@@ -2892,6 +2892,7 @@
         measure(("vue " + name + " patch"), startTag, endTag);
       };
     } else {
+      // _render render.js
       updateComponent = function () {
         vm._update(vm._render(), hydrating);
       };
@@ -4617,6 +4618,7 @@
   }
 
   function renderMixin (Vue) {
+
     // install runtime convenience helpers
     installRenderHelpers(Vue.prototype);
 
@@ -4648,6 +4650,7 @@
         /* istanbul ignore else */
         if (vm.$options.renderError) {
           try {
+            // vm._renderProxy = vm
             vnode = vm.$options.renderError.call(vm._renderProxy, vm.$createElement, e);
           } catch (e) {
             handleError(e, vm, "renderError");
@@ -5527,6 +5530,7 @@
    * of making flow understand it is not worth it.
    */
 
+
   var emptyNode = new VNode('', {}, []);
 
   var hooks = ['create', 'activate', 'update', 'remove', 'destroy'];
@@ -5572,7 +5576,7 @@
 
     var modules = backend.modules;
     var nodeOps = backend.nodeOps;
-
+    //['create', 'activate', 'update', 'remove', 'destroy']
     for (i = 0; i < hooks.length; ++i) {
       cbs[hooks[i]] = [];
       for (j = 0; j < modules.length; ++j) {
@@ -5622,6 +5626,7 @@
 
     var creatingElmInVPre = 0;
 
+    //递归调用 深度遍历
     function createElm (
       vnode,
       insertedVnodeQueue,
@@ -5662,7 +5667,6 @@
             );
           }
         }
-
         vnode.elm = vnode.ns
           ? nodeOps.createElementNS(vnode.ns, tag)
           : nodeOps.createElement(tag, vnode);
@@ -5672,6 +5676,14 @@
         {
           createChildren(vnode, children, insertedVnodeQueue);
           if (isDef(data)) {
+            //如果当前节点存在data 即
+            /*
+            data: {
+              on: {
+                click: fn
+              }
+            }
+            */
             invokeCreateHooks(vnode, insertedVnodeQueue);
           }
           insert(parentElm, vnode.elm, refElm);
@@ -5904,6 +5916,7 @@
       }
 
       while (oldStartIdx <= oldEndIdx && newStartIdx <= newEndIdx) {
+        /*前四种情况其实是指定key的时候，判定为同一个VNode，则直接patchVnode即可，分别比较oldCh以及newCh的两头节点2*2=4种情况*/
         if (isUndef(oldStartVnode)) {
           oldStartVnode = oldCh[++oldStartIdx]; // Vnode has been moved left
         } else if (isUndef(oldEndVnode)) {
@@ -5927,6 +5940,11 @@
           oldEndVnode = oldCh[--oldEndIdx];
           newStartVnode = newCh[++newStartIdx];
         } else {
+          /*
+            生成一个key与旧VNode的key对应的哈希表（只有第一次进来undefined的时候会生成，也为后面检测重复的key值做铺垫）
+            比如childre是这样的 [{xx: xx, key: 'key0'}, {xx: xx, key: 'key1'}, {xx: xx, key: 'key2'}]  beginIdx = 0   endIdx = 2
+            结果生成{key0: 0, key1: 1, key2: 2}
+          */
           if (isUndef(oldKeyToIdx)) { oldKeyToIdx = createKeyToOldIdx(oldCh, oldStartIdx, oldEndIdx); }
           idxInOld = isDef(newStartVnode.key)
             ? oldKeyToIdx[newStartVnode.key]
@@ -6010,8 +6028,13 @@
 
       // reuse element for static trees.
       // note we only do this if the vnode is cloned -
-      // if the new node is not cloned it means the render functions have been
+      // if the new node is not cloned it means the render functions have beenconsole.log('focus');
       // reset by the hot-reload-api and we need to do a proper re-render.
+        /*
+          如果新旧VNode都是静态的，同时它们的key相同（代表同一节点），
+          并且新的VNode是clone或者是标记了once（标记v-once属性，只渲染一次），
+          那么只需要替换elm以及componentInstance即可。
+        */
       if (isTrue(vnode.isStatic) &&
         isTrue(oldVnode.isStatic) &&
         vnode.key === oldVnode.key &&
@@ -6037,19 +6060,24 @@
         if (isDef(oldCh) && isDef(ch)) {
           if (oldCh !== ch) { updateChildren(elm, oldCh, ch, insertedVnodeQueue, removeOnly); }
         } else if (isDef(ch)) {
+          /*如果老节点没有子节点而新节点存在子节点，先清空elm的文本内容，然后为当前节点加入子节点*/
           {
             checkDuplicateKeys(ch);
           }
           if (isDef(oldVnode.text)) { nodeOps.setTextContent(elm, ''); }
           addVnodes(elm, null, ch, 0, ch.length - 1, insertedVnodeQueue);
         } else if (isDef(oldCh)) {
+          /*当新节点没有子节点而老节点有子节点的时候，则移除所有ele的子节点*/
           removeVnodes(elm, oldCh, 0, oldCh.length - 1);
         } else if (isDef(oldVnode.text)) {
+          /*当新老节点都无子节点的时候，只是文本的替换，因为这个逻辑中新节点text不存在，所以直接去除ele的文本*/
           nodeOps.setTextContent(elm, '');
         }
       } else if (oldVnode.text !== vnode.text) {
+        /*当新老节点text不一样时，直接替换这段文本*/
         nodeOps.setTextContent(elm, vnode.text);
       }
+      /*调用postpatch钩子*/
       if (isDef(data)) {
         if (isDef(i = data.hook) && isDef(i = i.postpatch)) { i(oldVnode, vnode); }
       }
@@ -6187,7 +6215,6 @@
 
       var isInitialPatch = false;
       var insertedVnodeQueue = [];
-
       if (isUndef(oldVnode)) {
         // empty mount (likely as component), create new root element
         isInitialPatch = true;
@@ -6239,7 +6266,7 @@
             oldElm._leaveCb ? null : parentElm,
             nodeOps.nextSibling(oldElm)
           );
-
+            debugger
           // update parent placeholder node element, recursively
           if (isDef(vnode.parent)) {
             var ancestor = vnode.parent;
@@ -6269,7 +6296,6 @@
               ancestor = ancestor.parent;
             }
           }
-
           // destroy old node
           if (isDef(parentElm)) {
             removeVnodes(parentElm, [oldVnode], 0, 0);
@@ -6549,31 +6575,44 @@
 
   var validDivisionCharRE = /[\w).+\-_$\]]/;
 
+  // <div :key="/id|featId/.test(id).toString()"></div>
+  // <div :key="'id | featId'"></div>
+  // <div :key="(aa | bb)"></div>
+
   function parseFilters (exp) {
-    var inSingle = false;
+    var inSingle = false;// 用来标识接下来解析的字符是否在由单引号包裹的字符串中
     var inDouble = false;
     var inTemplateString = false;
     var inRegex = false;
-    var curly = 0;
-    var square = 0;
-    var paren = 0;
+    var curly = 0;//{}
+    var square = 0;//[]
+    var paren = 0;//()
     var lastFilterIndex = 0;
+    // c 当前字符
+    // i 当前字符索引
+    // pre 前一个字符
+    // expression 返回的结果
+    // filters 过滤器函数名
     var c, prev, i, expression, filters;
 
     for (i = 0; i < exp.length; i++) {
       prev = c;
       c = exp.charCodeAt(i);
       if (inSingle) {
+        // ' \
         if (c === 0x27 && prev !== 0x5C) { inSingle = false; }
       } else if (inDouble) {
+        // " \
         if (c === 0x22 && prev !== 0x5C) { inDouble = false; }
       } else if (inTemplateString) {
+        // ` \
         if (c === 0x60 && prev !== 0x5C) { inTemplateString = false; }
       } else if (inRegex) {
+        // / \
         if (c === 0x2f && prev !== 0x5C) { inRegex = false; }
       } else if (
-        c === 0x7C && // pipe
-        exp.charCodeAt(i + 1) !== 0x7C &&
+        c === 0x7C && // pipe |
+        exp.charCodeAt(i + 1) !== 0x7C && //  前后不可为 |
         exp.charCodeAt(i - 1) !== 0x7C &&
         !curly && !square && !paren
       ) {
@@ -6604,6 +6643,7 @@
             p = exp.charAt(j);
             if (p !== ' ') { break }
           }
+          // <div :key="a + /a/.test('abc')"></div>
           if (!p || !validDivisionCharRE.test(p)) {
             inRegex = true;
           }
@@ -6649,6 +6689,7 @@
     console.error(("[Vue compiler]: " + msg));
   }
 
+  // [1,2,undefined].filter(_ => _) => [1,2]
   function pluckModuleFunction (
     modules,
     key
@@ -6712,19 +6753,24 @@
     // the only target envs that have right/middle clicks.
     if (name === 'click') {
       if (modifiers.right) {
+        // 鼠标右键事件
         name = 'contextmenu';
         delete modifiers.right;
       } else if (modifiers.middle) {
+        // 鼠标滚轮事件
         name = 'mouseup';
       }
     }
 
     // check capture modifier
     if (modifiers.capture) {
+      // 即元素自身触发的事件先在此处理，然后才交由内部元素进行处理
       delete modifiers.capture;
       name = '!' + name; // mark the event as captured
     }
     if (modifiers.once) {
+      // <div @click.once="handleClick"></div>
+      // <div @~click="handleClick"></div>
       delete modifiers.once;
       name = '~' + name; // mark the event as once
     }
@@ -6752,15 +6798,28 @@
     var handlers = events[name];
     /* istanbul ignore if */
     if (Array.isArray(handlers)) {
+      // <div @click.prevent="handleClick1" @click="handleClick2" @click.self="handleClick3"></div>
       important ? handlers.unshift(newHandler) : handlers.push(newHandler);
     } else if (handlers) {
+      // <div @click.prevent="handleClick1" @click="handleClick2"></div>
       events[name] = important ? [newHandler, handlers] : [handlers, newHandler];
     } else {
+      // <div @click.once="handleClick"></div>
+      /*
+        '~click': {
+          value: 'handleClick',
+          modifiers: {}
+        }
+      */
       events[name] = newHandler;
     }
 
     el.plain = false;
   }
+
+  // <my-component key=true></my-component>
+  // <my-component :key='aaa'></my-component>
+  // <my-component key='aaa'></my-component>
 
   function getBindingAttr (
     el,
@@ -7303,6 +7362,7 @@
   /*  */
 
   var parseStyleText = cached(function (cssText) {
+    //<div style="color: red; background: url(www.xxx.com?a=1&amp;copy=3);"></div>
     var res = {};
     var listDelimiter = /;(?![^(]*\))/g;
     var propertyDelimiter = /:(.+)/;
@@ -8045,6 +8105,7 @@
   // built-in modules have been applied.
   var modules = platformModules.concat(baseModules);
 
+  // nodeOps节点操作函数
   var patch = createPatchFunction({ nodeOps: nodeOps, modules: modules });
 
   /**
@@ -8683,7 +8744,7 @@
   });
 
 
-
+  // abc{{name}}def
   function parseText (
     text,
     delimiters
@@ -8715,7 +8776,7 @@
     }
     return {
       expression: tokens.join('+'),
-      tokens: rawTokens
+      tokens: rawTokens // for weex
     }
   }
 
@@ -8725,6 +8786,7 @@
     var warn = options.warn || baseWarn;
     var staticClass = getAndRemoveAttr(el, 'class');
     if (staticClass) {
+      // <div class="{{ isActive ? 'active' : '' }}"></div>
       var res = parseText(staticClass, options.delimiters);
       if (res) {
         warn(
@@ -9332,6 +9394,7 @@
         inPre = false;
       }
       // apply post-transforms
+      // 非一元标签的结束标签或遇到一元标签
       for (var i = 0; i < postTransforms.length; i++) {
         postTransforms[i](element, options);
       }
@@ -9388,11 +9451,12 @@
         if (inVPre) {
           processRawAttrs(element);
         } else if (!element.processed) {
+          // processed 是否被解析过
           // structural directives
           processFor(element);
           processIf(element);
-          // v-one
-          processOnce(element);
+          processOnce(element);// v-once
+
           // element-scope stuff
           processElement(element, options);
         }
@@ -9458,6 +9522,7 @@
 
       end: function end () {//结束标签
         // remove trailing whitespace
+        // <div><span>test</span> <!-- 空白占位 -->  </div>
         var element = stack[stack.length - 1];
         var lastNode = element.children[element.children.length - 1];
         if (lastNode && lastNode.type === 3 && lastNode.text === ' ' && !inPre) {
@@ -9471,6 +9536,11 @@
 
       chars: function chars (text) {//纯文本
         if (!currentParent) {
+          /*
+          <template>
+            <div>根元素内的文本节点</div>根元素外的文本节点
+          </template>
+          */
           {
             if (text === template) {
               warnOnce(
@@ -9490,6 +9560,13 @@
           currentParent.tag === 'textarea' &&
           currentParent.attrsMap.placeholder === text
         ) {
+          /*
+          <textarea placeholder="some placeholder..."></textarea>
+
+          innerHTML====>>>>>>
+
+          <textarea placeholder="some placeholder...">some placeholder...</textarea>
+          */
           return
         }
         var children = currentParent.children;
@@ -9530,7 +9607,7 @@
       el.pre = true;
     }
   }
-
+  // <div v-pre v-on:click="handleClick"></div>
   function processRawAttrs (el) {
     var l = el.attrsList.length;
     if (l) {
@@ -9552,6 +9629,9 @@
 
     // determine whether this is a plain element after
     // removing structural attributes
+    // 结构化属性
+    // for if once
+    // 经过一系列的处理之后仍无属性节点
     element.plain = !element.key && !element.attrsList.length;
 
     processRef(element);
@@ -9560,9 +9640,13 @@
     for (var i = 0; i < transforms.length; i++) {
       element = transforms[i](element, options) || element;
     }
+    // v-text、v-html、v-show、v-on、v-bind、v-model、v-cloak
     processAttrs(element);
   }
 
+  // <div key="id"></div> => el.key = JSON.stringify('id')
+  // <div :key="id"></div> => el.key = 'id'
+  // <div :key="id | featId"></div> => el.key = '_f("featId")(id)'
   function processKey (el) {
     var exp = getBindingAttr(el, 'key');
     if (exp) {
@@ -9595,6 +9679,7 @@
 
   function processFor (el) {
     var exp;
+    // 此种写法值得借鉴
     if ((exp = getAndRemoveAttr(el, 'v-for'))) {
       var res = parseFor(exp);
       if (res) {
@@ -9612,6 +9697,7 @@
   function parseFor (exp) {
     var inMatch = exp.match(forAliasRE);
     // 匹配失败返回null
+    // '(item, index, key)  in list'
     if (!inMatch) { return }
     var res = {};
     res.for = inMatch[2].trim();
@@ -9631,6 +9717,8 @@
 
   function processIf (el) {
     var exp = getAndRemoveAttr(el, 'v-if');
+    // <div v-if></div>
+    // ''
     if (exp) {
       el.if = exp;
       addIfCondition(el, {
@@ -9696,7 +9784,9 @@
 
   function processSlot (el) {
     if (el.tag === 'slot') {
+      // <slot name="header"></slot>
       el.slotName = getBindingAttr(el, 'name');
+      // slot 抽象组件上不可有key属性
       if (el.key) {
         warn$2(
           "`key` does not work on <slot> because slots are abstract outlets " +
@@ -9707,6 +9797,8 @@
     } else {
       var slotScope;
       if (el.tag === 'template') {
+        // <template scope=""></template>
+        // scope 属性和 slot-scope 属性是不能写成绑定的属性
         slotScope = getAndRemoveAttr(el, 'scope');
         /* istanbul ignore if */
         if (slotScope) {
@@ -9720,6 +9812,13 @@
         }
         el.slotScope = slotScope || getAndRemoveAttr(el, 'slot-scope');
       } else if ((slotScope = getAndRemoveAttr(el, 'slot-scope'))) {
+        //bad  <div slot-scope="slotProps" v-for="item of slotProps.list"></div>
+        /*
+          good
+          <template slot-scope="slotProps">
+            <div v-for="item of slotProps.list"></div>
+          </template>
+        */
         /* istanbul ignore if */
         if (el.attrsMap['v-for']) {
           warn$2(
@@ -9736,6 +9835,7 @@
         el.slotTarget = slotTarget === '""' ? '"default"' : slotTarget;
         // preserve slot as an attribute for native shadow DOM compat
         // only for non-scoped slots.
+        // 原生html有slot属性 属性保留
         if (el.tag !== 'template' && !el.slotScope) {
           addAttr(el, 'slot', slotTarget);
         }
@@ -9763,6 +9863,7 @@
         // mark element as dynamic
         el.hasBindings = true;
         // modifiers
+        // sync camel prop
         modifiers = parseModifiers(name);
         if (modifiers) {
           name = name.replace(modifierRE, '');
@@ -9770,7 +9871,7 @@
         if (bindRE.test(name)) { // v-bind
           name = name.replace(bindRE, '');
           value = parseFilters(value);
-          isProp = false;
+          isProp = false;//原生属性
           if (
             value.trim().length === 0
           ) {
@@ -9782,6 +9883,7 @@
             if (modifiers.prop) {
               isProp = true;
               name = camelize(name);
+              // 特殊情况 驼峰 但是后面4位大写
               if (name === 'innerHtml') { name = 'innerHTML'; }
             }
             if (modifiers.camel) {
@@ -9795,6 +9897,8 @@
               );
             }
           }
+          // el.component 属性为假就能够保证标签没有使用 is 属性
+          // component在渲染的时候会替换tag,会影响判断
           if (isProp || (
             !el.component && platformMustUseProp(el.tag, el.attrsMap.type, name)
           )) {
@@ -9804,8 +9908,12 @@
           }
         } else if (onRE.test(name)) { // v-on
           name = name.replace(onRE, '');
+          // 当前处理对象  属性名称  属性值  修饰符
           addHandler(el, name, value, modifiers, false, warn$2);
         } else { // normal directives
+          // v-html v-text v-show v-cloak v-model
+          // v-custom:arg.modif="myMethod"
+          // addDirective(el, 'custom', 'v-custom:arg.modif', 'myMethod', 'arg', { modif: true })
           name = name.replace(dirRE, '');
           // parse arg
           var argMatch = name.match(argRE);
@@ -9819,8 +9927,10 @@
           }
         }
       } else {
+        //<div id="box" width="100px"></div>
         // literal attribute
         {
+          //<div id="{{ isTrue ? 'a' : 'b' }}"></div>
           var res = parseText(value, delimiters);
           if (res) {
             warn$2(
@@ -9834,9 +9944,11 @@
         addAttr(el, name, JSON.stringify(value));
         // #6887 firefox doesn't update muted state if set via attribute
         // even immediately after element creation
+        // 火狐浏览器中存在无法通过DOM元素的 setAttribute 方法为 video 标签添加 muted 属性的问题
         if (!el.component &&
             name === 'muted' &&
             platformMustUseProp(el.tag, el.attrsMap.type, name)) {
+          //元素描述对象的 el.props 数组中所存储的任何属性都会在由虚拟DOM创建真实DOM的过程中直接使用真实DOM对象添加
           addProp(el, name, 'true');
         }
       }
@@ -9844,6 +9956,13 @@
   }
 
   function checkInFor (el) {
+    /*
+    <div v-for="obj of list" :ref="obj.id"></div>
+
+    <div v-for="obj of list">
+      <div :ref="obj.id"></div>
+    </div>
+    */
     var parent = el;
     while (parent) {
       if (parent.for !== undefined) {
@@ -9908,6 +10027,22 @@
   }
 
   function checkForAliasModel (el, value) {
+    /*
+    [1,2,3]
+    <div v-for="item of list">
+      <input v-model="item" />
+    </div>
+
+
+    <div v-for="obj of list">
+      <input v-model="obj" />
+    </div>
+    [
+      { item: 1 },
+      { item: 2 },
+      { item: 3 },
+    ]
+    */
     var _el = el;
     while (_el) {
       if (_el.for && _el.alias === value) {
@@ -9936,6 +10071,7 @@
       if (map[':type'] || map['v-bind:type']) {
         typeBinding = getBindingAttr(el, 'type');
       }
+      // <input v-model="val" v-bind="{ type: inputType }" />
       if (!map.type && !typeBinding && map['v-bind']) {
         typeBinding = "(" + (map['v-bind']) + ").type";
       }
@@ -9988,6 +10124,7 @@
   }
 
   function cloneASTElement (el) {
+    // slice() 复制数组
     return createASTElement(el.tag, el.attrsList.slice(), el.parent)
   }
 
@@ -10061,6 +10198,7 @@
     isStaticKey = genStaticKeysCached(options.staticKeys || '');
     isPlatformReservedTag = options.isReservedTag || no;
     // first pass: mark all non-static nodes.
+
     markStatic$1(root);
     // second pass: mark static roots.
     markStaticRoots(root, false);
@@ -10106,6 +10244,7 @@
   }
 
   function markStaticRoots (node, isInFor) {
+    // <div>111</div>
     if (node.type === 1) {
       if (node.static || node.once) {
         node.staticInFor = isInFor;
@@ -10113,6 +10252,7 @@
       // For a node to qualify as a static root, it should have children that
       // are not just static text. Otherwise the cost of hoisting out will
       // outweigh the benefits and it's better off to just always render it fresh.
+      //<div><p></p></div>
       if (node.static && node.children.length && !(
         node.children.length === 1 &&
         node.children[0].type === 3
@@ -10148,7 +10288,7 @@
       !isBuiltInTag(node.tag) && // not a built-in
       isPlatformReservedTag(node.tag) && // not a component
       !isDirectChildOfTemplateFor(node) &&
-      Object.keys(node).every(isStaticKey)
+      Object.keys(node).every(isStaticKey)//?
     ))
   }
 
@@ -10245,9 +10385,11 @@
     var isFunctionExpression = fnExpRE.test(handler.value);
 
     if (!handler.modifiers) {
+      // @click="test"
       if (isMethodPath || isFunctionExpression) {
         return handler.value
       }
+      // @click="test(aaa)"
       return ("function($event){" + (handler.value) + "}") // inline statement
     } else {
       var code = '';
@@ -10359,6 +10501,7 @@
     ast,
     options
   ) {
+
     var state = new CodegenState(options);
     var code = ast ? genElement(ast, state) : '_c("div")';
     return {
@@ -10371,7 +10514,6 @@
     if (el.parent) {
       el.pre = el.pre || el.parent.pre;
     }
-
     if (el.staticRoot && !el.staticProcessed) {
       return genStatic(el, state)
     } else if (el.once && !el.onceProcessed) {
@@ -10597,19 +10739,25 @@
   function genDirectives (el, state) {
     var dirs = el.directives;
     if (!dirs) { return }
+
     var res = 'directives:[';
     var hasRuntime = false;
     var i, l, dir, needRuntime;
     for (i = 0, l = dirs.length; i < l; i++) {
       dir = dirs[i];
       needRuntime = true;
+      // bind on cloak text html model
       var gen = state.directives[dir.name];
       if (gen) {
+        // 控制 影响
         // compile-time directive that manipulates AST.
+        // 比对
         // returns true if it also needs a runtime counterpart.
+        // model -> true
         needRuntime = !!gen(el, dir, state.warn);
       }
       if (needRuntime) {
+        // 自定义 & model
         hasRuntime = true;
         res += "{name:\"" + (dir.name) + "\",rawName:\"" + (dir.rawName) + "\"" + (dir.value ? (",value:(" + (dir.value) + "),expression:" + (JSON.stringify(dir.value))) : '') + (dir.arg ? (",arg:\"" + (dir.arg) + "\"") : '') + (dir.modifiers ? (",modifiers:" + (JSON.stringify(dir.modifiers))) : '') + "},";
       }
@@ -11068,10 +11216,12 @@
   ) {
     // finalOptions
     var ast = parse(template.trim(), options);
-    if (options.optimize !== false) {
-      optimize(ast, options);
+    console.log(ast);
+    if (options.optimize !== false) {// 使最优化
+      optimize(ast, options);//检测每一颗树是否是静态结点（生成之后DOM不会再改变）
     }
     var code = generate(ast, options);
+    console.log(code);
     return {
       ast: ast,
       render: code.render,

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>demo</title>
+    <!-- Delete ".min" for console warnings in development -->
+    <script src="../../dist/vue.js"></script>
+  </head>
+  <body>
+      <!-- </p> -->
+      <!-- <div id="test">
+        1<<23></23>
+      </div> -->
+      <div id="app">
+        <p>asdasdasdasd</p>
+      </div>
+    </div>
+
+    <script>
+      let Child = {
+        template: `
+        <div class="button">
+          <button @click="clickHandler($event)">
+              <p>{{text}}</p>
+          </button>
+          <slot></slot>
+        </div>
+        `,
+        props: {
+          text: {
+            type: String,
+            default: 'click me'
+          }
+        },
+        methods: {
+          clickHandler(e) {
+            debugger
+            console.log('Button clicked!', e)
+            this.$emit('select')
+          }
+        }
+      }
+      new Vue({
+        el: '#app',
+        template: `
+        <div class="wrapper" @click="testFn">
+          <p>111111</p>
+          <child @select="selectHandler" text='my text' @click.native.prevent="clickHandler"><p>I'm a slot</p></child>
+          <h1>222222</h1>
+        </div>`,
+        data: {
+
+        },
+        components: {
+          Child
+        },
+        methods: {
+          selectHandler() {
+            console.log('clicked')
+          },
+          clickHandler() {
+            console.log('native clicked')
+          },
+          testFn() {
+
+          },
+          testFn2() {
+
+          }
+        },
+        created() {
+        }
+      })
+    </script>
+
+  </body>
+</html>

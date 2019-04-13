@@ -12,7 +12,7 @@
         1<<23></23>
       </div> -->
       <div id="app">
-
+        <p>asdasdasdasd</p>
       </div>
     </div>
 
@@ -20,8 +20,8 @@
       new Vue({
         el: '#app',
         template: `
-        <div>
-        <button @click="test1 = !test1">switch</button>
+        <div @click="testFn" :class="test1?'active':''">
+        <button @click="test1 = !test1">{{test1?'div':'p'}}</button>
         <div class="test1" v-if="test1"><span>1111</span></div>
         <p class="test2" v-else><span>2222</span></p></div>`,
         data: {

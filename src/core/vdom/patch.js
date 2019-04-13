@@ -10,23 +10,15 @@
  * of making flow understand it is not worth it.
  */
 
-import VNode, { cloneVNode } from './vnode'
-import config from '../config'
-import { SSR_ATTR } from 'shared/constants'
-import { registerRef } from './modules/ref'
-import { traverse } from '../observer/traverse'
-import { activeInstance } from '../instance/lifecycle'
-import { isTextInputType } from 'web/util/element'
+import { SSR_ATTR } from 'shared/constants';
+import { isTextInputType } from 'web/util/element';
+import config from '../config';
+import { activeInstance } from '../instance/lifecycle';
+import { traverse } from '../observer/traverse';
+import { isDef, isPrimitive, isRegExp, isTrue, isUndef, makeMap, warn } from '../util/index';
+import { registerRef } from './modules/ref';
+import VNode, { cloneVNode } from './vnode';
 
-import {
-  warn,
-  isDef,
-  isUndef,
-  isTrue,
-  makeMap,
-  isRegExp,
-  isPrimitive
-} from '../util/index'
 
 export const emptyNode = new VNode('', {}, [])
 
@@ -542,7 +534,7 @@ export function createPatchFunction (backend) {
 
     // reuse element for static trees.
     // note we only do this if the vnode is cloned -
-    // if the new node is not cloned it means the render functions have been
+    // if the new node is not cloned it means the render functions have beenconsole.log('focus');
     // reset by the hot-reload-api and we need to do a proper re-render.
       /*
         如果新旧VNode都是静态的，同时它们的key相同（代表同一节点），
@@ -780,7 +772,7 @@ export function createPatchFunction (backend) {
           oldElm._leaveCb ? null : parentElm,
           nodeOps.nextSibling(oldElm)
         )
-
+          debugger
         // update parent placeholder node element, recursively
         if (isDef(vnode.parent)) {
           let ancestor = vnode.parent
@@ -810,7 +802,6 @@ export function createPatchFunction (backend) {
             ancestor = ancestor.parent
           }
         }
-
         // destroy old node
         if (isDef(parentElm)) {
           removeVnodes(parentElm, [oldVnode], 0, 0)
