@@ -149,6 +149,10 @@ export function defineReactive (
   // cater for pre-defined getter/setters
   const getter = property && property.get
   const setter = property && property.set
+  // 当一个属性有自定义的get函数时不会被深度观测
+  // 当一个属性有自定义的get函数时不会被深度观测
+  // !getter
+  // setter (getter && setter)
   if ((!getter || setter) && arguments.length === 2) {
     val = obj[key]
   }

@@ -13,46 +13,72 @@
       </div> -->
       <div id="app">
         <p>asdasdasdasd</p>
+        <h1>aaaa</h1>
       </div>
+      <h1>testets</h1>
     </div>
 
     <script>
-      let Child = {
-        template: `
-        <div class="button">
-          <button @click="clickHandler($event)">
-              <p>{{text}}</p>
-          </button>
-          <slot></slot>
-        </div>
-        `,
-        props: {
-          text: {
-            type: String,
-            default: 'click me'
-          }
-        },
-        methods: {
-          clickHandler(e) {
-            debugger
-            console.log('Button clicked!', e)
-            this.$emit('select')
-          }
-        }
-      }
+      // Vue.component('button-counter', {
+      //   data: function () {
+      //     return {
+      //       count: 0
+      //     }
+      //   },
+      //   template: '<button v-on:click="count++">You clicked me {{ count }} times.</button>'
+      // })
+      Vue.component('async-example', function (resolve, reject) {
+        setTimeout(function () {
+          // 向 `resolve` 回调传递组件定义
+          resolve({
+            template: '<div>I am async!</div>'
+          })
+        }, 1000)
+      });
+      // let Child = {
+      //   template: `
+      //   <div class="button">
+      //     <slot name="test"><p>I'm a default slot</p></slot>
+      //     <slot name="before"></slot>
+      //     <button @click="clickHandler($event)">
+      //         <p>{{text}}</p>
+      //     </button>
+      //     <slot name="after"></slot>
+      //   </div>
+      //   `,
+      //   props: {
+      //     text: {
+      //       type: String,
+      //       default: 'click me'
+      //     }
+      //   },
+      //   methods: {
+      //     clickHandler(e) {
+      //       console.log('Button clicked!', e)
+      //       this.$emit('select')
+      //     }
+      //   }
+      // }
       new Vue({
         el: '#app',
+        // template: `
+        // <div class="wrapper" @click="testFn">
+        //   <p>111111</p>
+        //   <async-example></async-example>
+        //   <child @select="selectHandler" text='my text' @click.native.prevent="clickHandler"><p slot="before">I'm a before slot</p><p slot="after">I'm a after slot</p></child>
+        //   <h1>222222</h1>
+        // </div>`,
         template: `
         <div class="wrapper" @click="testFn">
           <p>111111</p>
-          <child @select="selectHandler" text='my text' @click.native.prevent="clickHandler"><p>I'm a slot</p></child>
+          <async-example></async-example>
           <h1>222222</h1>
         </div>`,
         data: {
 
         },
         components: {
-          Child
+          // Child
         },
         methods: {
           selectHandler() {

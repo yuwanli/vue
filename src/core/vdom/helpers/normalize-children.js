@@ -41,6 +41,7 @@ function isTextNode (node): boolean {
 }
 
 function normalizeArrayChildren (children: any, nestedIndex?: string): Array<VNode> {
+  // nestedIndex 嵌套的索引
   const res = []
   let i, c, lastIndex, last
   for (i = 0; i < children.length; i++) {

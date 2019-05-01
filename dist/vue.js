@@ -2319,6 +2319,7 @@
   }
 
   function normalizeArrayChildren (children, nestedIndex) {
+    // nestedIndex 嵌套的索引
     var res = [];
     var i, c, lastIndex, last;
     for (i = 0; i < children.length; i++) {
@@ -2393,6 +2394,29 @@
     return node
   }
 
+  /*
+  Vue.component('async-example', function (resolve, reject) {
+    setTimeout(function () {
+      // 向 `resolve` 回调传递组件定义
+      resolve({
+        template: '<div>I am async!</div>'
+      })
+    }, 1000)
+  })
+
+  Vue.component('async-webpack-example', function (resolve) {
+    // 这个特殊的 `require` 语法将会告诉 webpack
+    // 自动将你的构建代码切割成多个包，这些包
+    // 会通过 Ajax 请求加载
+    require(['./my-async-component'], resolve)
+  })
+
+  Vue.component(
+    'async-webpack-example',
+    // 这个 `import` 函数会返回一个 `Promise` 对象。
+    () => import('./my-async-component')
+  )
+  */
   function resolveAsyncComponent (
     factory,
     baseCtor,
@@ -2913,6 +2937,7 @@
     // manually mounted instance, call mounted on self
     // mounted is called for render-created child components in its inserted hook
     if (vm.$vnode == null) {
+      // 当前是根Vue实例
       vm._isMounted = true;
       callHook(vm, 'mounted');
     }
@@ -4476,6 +4501,8 @@
     children,
     normalizationType
   ) {
+    // children 规范化
+    // vnode的创建
     if (isDef(data) && isDef((data).__ob__)) {
       warn(
         "Avoid using observed data object as vnode data: " + (JSON.stringify(data)) + "\n" +
@@ -4527,7 +4554,9 @@
           undefined, undefined, context
         );
       } else if ((!data || !data.pre) && isDef(Ctor = resolveAsset(context.$options, 'components', tag))) {
+        // 已注册的组件
         // component
+        debugger
         vnode = createComponent(Ctor, data, context, children, tag);
       } else {
         // unknown or unlisted namespaced elements
@@ -5776,6 +5805,7 @@
     }
 
     function createChildren (vnode, children, insertedVnodeQueue) {
+      // 深度优先遍历算法
       if (Array.isArray(children)) {
         {
           checkDuplicateKeys(children);
@@ -6266,7 +6296,6 @@
             oldElm._leaveCb ? null : parentElm,
             nodeOps.nextSibling(oldElm)
           );
-            debugger
           // update parent placeholder node element, recursively
           if (isDef(vnode.parent)) {
             var ancestor = vnode.parent;

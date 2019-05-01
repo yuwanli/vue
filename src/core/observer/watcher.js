@@ -49,7 +49,6 @@ export default class Watcher {
     options?: ?Object,
     isRenderWatcher?: boolean //是否是渲染函数的观察者
   ) {
-    console.log(vm)
     this.vm = vm
     if (isRenderWatcher) {
       vm._watcher = this
