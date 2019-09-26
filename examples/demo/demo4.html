@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>demo</title>
+    <!-- Delete ".min" for console warnings in development -->
+    <script src="../../dist/vue.js"></script>
+  </head>
+  <body>
+      <div id="app">
+        <demo-component @democlick="democlick" :value="value">
+          <p slot="test" v-if="flag"><b>slot content</b></p>
+        </demo-component>
+        <button @click="test">change value</button>
+        <p>{{testValue}}</p>
+      </div>
+    <script>
+      var demoComponent = {
+        props: {
+          value: {
+            type: String,
+            default: 'default value'
+          }
+        },
+        methods: {
+          comClick() {
+            this.$emit('democlick')
+          }
+        },
+        beforeCreate() {
+          console.log('【com】 beforeCreate')
+        },
+        created() {
+          console.log('【com】created')
+        },
+        beforeMount() {
+          console.log('【com】 beforeMount')
+        },
+        mounted() {
+          console.log('【com】 mounted')
+        },
+        template: `
+        <div @click="comClick">
+          <p style="color:#f21818;">{{value}}</p>
+          <slot name="test"><p>demo-component</p></slot>
+        </div>`
+      }
+      new Vue({
+        el: '#app',
+        data() {
+          return {
+            value: '1111',
+            flag: true,
+            testValue: 1
+          }
+        },
+        beforeCreate() {
+          console.log('【app】 beforeCreate')
+        },
+        created() {
+          console.log('【app】created')
+        },
+        beforeMount() {
+          console.log('【app】 beforeMount')
+        },
+        mounted() {
+          console.log('【app】 mounted')
+        },
+        components: {demoComponent},
+        methods: {
+          democlick() {
+            this.flag = !this.flag;
+            console.log('demoComponent click')
+          },
+          test() {
+            this.testValue+=1
+          }
+        }
+      })
+    </script>
+
+  </body>
+</html>

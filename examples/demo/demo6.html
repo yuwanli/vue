@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>demo</title>
+    <!-- Delete ".min" for console warnings in development -->
+    <script src="../../dist/vue.js"></script>
+  </head>
+  <body>
+      <div id="app">
+      </div>
+    <script>
+      new Vue({
+        data() {
+          return {
+            obj: {
+              test:1,
+            }
+          }
+        },
+        el: '#app',
+        template:
+          `<div>
+            <h1>good good study, day day up</h1>
+          </div>`,
+        components: {
+        },
+      })
+    </script>
+
+  </body>
+</html>

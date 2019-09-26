@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>demo</title>
+    <!-- Delete ".min" for console warnings in development -->
+    <script src="../../dist/vue.js"></script>
+  </head>
+  <body>
+      <div id="app">
+        <demo-component ref="demo" @democlick="democlick" :value.sync="value">
+          <p slot="test"><b>slot content</b></p>
+          <h1>self defalult slot</h1>
+        </demo-component>
+        <hr>
+        <button @click="test">test</button>
+        <button @click="toggleShow">test button</button>
+        <h1 v-if="showFlag">this is a title</h1>
+      </div>
+    <script>
+      Vue.component('global-component', {
+        template: '<p>global-component</p>'
+      })
+      var demoComponent = {
+        props: {
+          value: {
+            type: String,
+            default: 'default value'
+          },
+        },
+        methods: {
+          comClick() {
+            this.$emit('democlick')
+          },
+          testFn(){
+            console.log(this.value)
+          }
+        },
+        mounted() {
+          console.log(this.$slots)
+        },
+        template: `
+        <div @click="comClick">
+          <p style="color:#f21818;">{{value}}</p>
+          <slot name="test"><p>demo-component</p></slot>
+          <slot><h1 style="color:blue;">default slot</h1></slot>
+        </div>`
+      }
+      new Vue({
+        el: '#app',
+        data() {
+          return {
+            value: '',
+            num: 1,
+            showFlag: true
+          }
+        },
+        components: {demoComponent},
+        methods: {
+          numAdd() {
+            this.num += 1;
+          },
+          toggleShow() {
+            this.showFlag = !this.showFlag
+          },
+          democlick() {
+            this.value = '2222';
+            console.log('demoComponent click')
+          },
+          test() {
+            this.value = '2222333'
+            // debugger
+            this.$refs.demo.testFn()
+          }
+        }
+      })
+    </script>
+
+  </body>
+</html>

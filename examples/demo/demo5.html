@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>demo</title>
+    <!-- Delete ".min" for console warnings in development -->
+    <script src="../../dist/vue.js"></script>
+  </head>
+  <body>
+      <div id="app">
+        <p v-for="item in list" :key="item">{{item}}</p>
+        <p>{{message}}</p>
+        <p>{{message1}}</p>
+      </div>
+    <script>
+      Vue.component('global-component', {
+        data: function () {
+          return {
+            count: 0
+          }
+        },
+        template: '<p>global-component</p>'
+      })
+      new Vue({
+        data() {
+          return {
+            test: true,
+            message: 1,
+            message1: 1,
+            list: [1,2,3,4]
+          }
+        },
+        el: '#app',
+        watch: {
+          message() {
+            this.message1 +=1
+          },
+          message1() {
+            this.message +=1
+          }
+        },
+        mounted() {
+          setTimeout(() => {
+            // this.list = [4,2,3,1]
+            this.message = 2
+          },3000)
+        }
+      })
+    </script>
+
+  </body>
+</html>
